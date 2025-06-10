@@ -1,0 +1,17 @@
+project:
+  name: taskcat
+  regions:
+    - ap-southeast-1
+  s3_bucket: cloudformation-bucket-2025
+
+tests:
+  lab2-test:
+    template: CloudFormation/main.yaml
+    parameters:
+      KeyName: lab2
+      AMI: ami-05c261f9eb9de6a80
+      AvailabilityZone: ap-southeast-1a
+      AllowedSSHIp: 58.187.190.61/32
+      BucketName: cloudformation-bucket-2025
+    regions:
+      - ap-southeast-1
