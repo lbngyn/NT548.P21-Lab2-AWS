@@ -20,14 +20,6 @@ phases:
     commands:
       - echo "Fetching secret values from Secrets Manager"
       - |
-        # Lấy secret từ AWS Secrets Manager
-        SECRET_JSON=$(aws secretsmanager get-secret-value \
-          --secret-id "$TASKCAT_SECRET" \
-          --query SecretString \
-          --output text)
-          
-        echo SECRET_JSON
-
         # Parse JSON và export variables
         export REGION=$REGION
         export S3_BUCKET=$S3_BUCKET
