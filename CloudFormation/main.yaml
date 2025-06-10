@@ -1,0 +1,210 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Main stack for VPC Infrastructure"
+
+Parameters:
+  VpcCidr:
+    Type: String
+    Default: "10.0.0.0/16"
+    Description: CIDR block for VPC
+
+  PublicSubnetCidr:
+    Type: String
+    Default: "10.0.1.0/24"
+    Description: CIDR block for public subnet
+
+  PrivateSubnetCidr:
+    Type: String
+    Default: "10.0.2.0/24"
+    Description: CIDR block for private subnet
+
+  AvailabilityZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: "ap-southeast-1a"
+    Description: Availability Zone for subnets
+
+  AllowedSSHIp:
+    Type: String
+    Description: Allowed IP for SSH access
+
+  AMI:
+    Type: AWS::EC2::Image::Id
+    Description: "AMI ID for EC2"
+
+  InstanceType:
+    Type: String
+    Default: "t2.micro"
+    Description: "EC2 instance type"
+
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: "Key pair name for EC2"
+
+  BucketName:
+    Type: String
+    Description: "Base URL for all templates"
+    Default: "cloudformation-bucket-2025"
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/vpc.yaml"
+      Parameters:
+        VpcCIDR: !Ref VpcCidr
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  InternetGatewayStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/internet-gateway.yaml"
+      Parameters:
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        Name: "my-igw"
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  PublicSubnet:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/subnet.yaml"
+      Parameters:
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        SubnetCIDR: !Ref PublicSubnetCidr
+        AvailabilityZone: !Ref AvailabilityZone
+        MapPublicIP: "true"
+        SubnetName: "public-subnet"
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  PrivateSubnet:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/subnet.yaml"
+      Parameters:
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        SubnetCIDR: !Ref PrivateSubnetCidr
+        AvailabilityZone: !Ref AvailabilityZone
+        MapPublicIP: "false"
+        SubnetName: "private-subnet"
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  NATGatewayStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: InternetGatewayStack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/nat-gateway.yaml"
+      Parameters:
+        PublicSubnetID: !GetAtt PublicSubnet.Outputs.SubnetId
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  PrivateRouteTable:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/route-table-private.yaml"
+      Parameters:
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        SubnetId: !GetAtt PrivateSubnet.Outputs.SubnetId
+        NATGatewayId: !GetAtt NATGatewayStack.Outputs.NATGatewayID
+        Name: private-rt
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  PublicRouteTable:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/route-table-public.yaml"
+      Parameters:
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        SubnetId: !GetAtt PublicSubnet.Outputs.SubnetId
+        InternetGatewayId: !GetAtt InternetGatewayStack.Outputs.InternetGatewayId
+        Name: public-rt
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  SGPublicStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/security-group-public.yaml"
+      Parameters:
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        AllowedSSHIp: !Ref AllowedSSHIp
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  SGPrivateStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/security-group-private.yaml"
+      Parameters:
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        PublicSecurityGroupId: !GetAtt SGPublicStack.Outputs.PublicSGId
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  PublicEC2Instance:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/ec2.yaml"
+      Parameters:
+        AMI: !Ref AMI
+        SubnetId: !GetAtt PublicSubnet.Outputs.SubnetId
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        SecurityGroupId: !GetAtt SGPublicStack.Outputs.PublicSGId
+        AssociatePublicIp: true
+        InstanceName: public-ec2
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  PrivateEC2Instance:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${BucketName}.s3.amazonaws.com/CloudFormation/modules/ec2.yaml"
+      Parameters:
+        AMI: !Ref AMI
+        SubnetId: !GetAtt PrivateSubnet.Outputs.SubnetId
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        SecurityGroupId: !GetAtt SGPrivateStack.Outputs.PrivateSGId
+        AssociatePublicIp: false
+        InstanceName: private-ec2
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+Outputs:
+  VpcId:
+    Description: VPC ID
+    Value: !GetAtt VPCStack.Outputs.VpcId
+
+  InternetGatewayId:
+    Description: Internet Gateway ID
+    Value: !GetAtt InternetGatewayStack.Outputs.InternetGatewayId
+
+  PublicSubnetId:
+    Description: Public Subnet ID
+    Value: !GetAtt PublicSubnet.Outputs.SubnetId
+
+  PrivateSubnetId:
+    Description: Private Subnet ID
+    Value: !GetAtt PrivateSubnet.Outputs.SubnetId
+
+  NATGateWayId:
+    Value: !GetAtt NATGatewayStack.Outputs.NATGatewayID
+    Description: NAT Gateway ID
+
+  PublicEc2Id:
+    Value: !GetAtt PublicEC2Instance.Outputs.InstanceId
+
+  PublicEc2IP:
+    Value: !GetAtt PublicEC2Instance.Outputs.PublicIP
+
+  PrivateEc2Id:
+    Value: !GetAtt PrivateEC2Instance.Outputs.InstanceId
+
+  PrivateEc2Ip:
+    Value: !GetAtt PrivateEC2Instance.Outputs.PrivateIP

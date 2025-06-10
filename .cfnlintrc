@@ -1,0 +1,14 @@
+{
+  "templates": [
+    "CloudFormation/**/*.yaml"
+  ],
+  "ignore_checks": [],
+  "regions": [
+    "ap-southeast-1"
+  ],
+  "include_checks": [
+    "I",
+    "E",
+    "W"
+  ]
+}

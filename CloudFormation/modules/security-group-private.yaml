@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "EC2 Instance"
+
+Parameters:
+  VpcId:
+    Type: String
+    Description: "VPC ID for the security group"
+
+  PublicSecurityGroupId:
+    Type: String
+    Description: ID of the public security group allowed to SSH
+
+Resources:
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VpcId
+      GroupName: private-sg
+      GroupDescription: "Security group for private instances" # Added required description
+
+      SecurityGroupIngress:
+        - FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+          SourceSecurityGroupId: !Ref PublicSecurityGroupId
+
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+
+      Tags:
+        - Key: Name
+          Value: private-sg
+
+Outputs:
+  PrivateSGId:
+    Value: !Ref SecurityGroup

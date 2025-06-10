@@ -1,0 +1,17 @@
+project:
+  name: taskcat
+  regions:
+    - ${REGION}
+  s3_bucket: ${S3_BUCKET}
+
+tests:
+  lab2-test:
+    template: CloudFormation/main.yaml
+    parameters:
+      KeyName: ${KEY_NAME}
+      AMI: ${AMI_ID}
+      AvailabilityZone: ${AVAILABILITY_ZONE}
+      AllowedSSHIp: ${ALLOWED_SSH_IP}
+      BucketName: ${S3_BUCKET}
+    regions:
+      - ${REGION}
