@@ -6,6 +6,7 @@ env:
     S3_BUCKET: "NT548-lab2:S3_BUCKET"
     KEY_NAME: "NT548-lab2:KEY_NAME"
     AMI_ID: "NT548-lab2:AMI_ID"
+    AVAILABILITY_ZONE: "NT548-lab2:AVAILABILITY_ZONE"
 
 phases:
   install:
@@ -25,12 +26,7 @@ phases:
         export S3_BUCKET=$S3_BUCKET
         export KEY_NAME=$KEY_NAME
         export AMI_ID=$AMI_ID
-
-        # Lấy availability zone đầu tiên của region
-        export AVAILABILITY_ZONE=$(aws ec2 describe-availability-zones \
-          --region "$REGION" \
-          --query "AvailabilityZones[0].ZoneName" \
-          --output text)
+        export AVAILABILITY_ZONE=$AVAILABILITY_ZONE
 
         # Lấy IP hiện tại của CodeBuild
         export ALLOWED_SSH_IP="$(curl -s http://checkip.amazonaws.com)/32"
