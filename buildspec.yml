@@ -22,6 +22,8 @@ phases:
           --secret-id "$TASKCAT_SECRET" \
           --query SecretString \
           --output text)
+          
+        echo SECRET_JSON
 
         # Parse JSON và export variables
         export REGION=$(echo "$SECRET_JSON" | jq -r '.REGION')
