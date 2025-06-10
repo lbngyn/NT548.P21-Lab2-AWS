@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   secrets-manager:
-    TASKCAT_SECRET: NT48-lab2
+    TASKCAT_SECRET: NT548-lab2
 
 phases:
   install:
