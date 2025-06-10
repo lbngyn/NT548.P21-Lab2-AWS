@@ -23,7 +23,7 @@ phases:
         # Parse JSON và export variables
         export REGION=$REGION
         export S3_BUCKET=$S3_BUCKET
-        export KEY_NAME=KEY_NAME
+        export KEY_NAME=$KEY_NAME
         export AMI_ID=$AMI_ID
 
         # Lấy availability zone đầu tiên của region
@@ -56,15 +56,8 @@ phases:
   build:
     commands:
       - echo "Running taskcat test"
-      - taskcat test run --no-delete
+      - taskcat test run
 
   post_build:
     commands:
       - echo "TaskCat test completed"
-      - |
-        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
-          echo "Build succeeded - cleaning up test resources"
-          taskcat test clean ALL
-        else
-          echo "Build failed - keeping resources for debugging"
-        fi
