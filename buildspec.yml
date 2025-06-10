@@ -11,7 +11,7 @@ phases:
     commands:
       - echo "Installing cfn-lint and taskcat"
       - pip install cfn-lint taskcat
-      - yum install -y jq curl
+      - yum install -y jq
 
   pre_build:
     commands:
