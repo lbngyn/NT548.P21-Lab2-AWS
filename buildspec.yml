@@ -2,7 +2,10 @@ version: 0.2
 
 env:
   secrets-manager:
-    TASKCAT_SECRET: NT548-lab2
+    REGION: "NT548-lab2:REGION"
+    S3_BUCKET: "NT548-lab2:S3_BUCKET"
+    KEY_NAME: "NT548-lab2:KEY_NAME"
+    AMI_ID: "NT548-lab2:AMI_ID"
 
 phases:
   install:
@@ -26,10 +29,10 @@ phases:
         echo SECRET_JSON
 
         # Parse JSON và export variables
-        export REGION=$(echo "$SECRET_JSON" | jq -r '.REGION')
-        export S3_BUCKET=$(echo "$SECRET_JSON" | jq -r '.S3_BUCKET')
-        export KEY_NAME=$(echo "$SECRET_JSON" | jq -r '.KEY_NAME')
-        export AMI_ID=$(echo "$SECRET_JSON" | jq -r '.AMI_ID')
+        export REGION=$REGION
+        export S3_BUCKET=$S3_BUCKET
+        export KEY_NAME=KEY_NAME
+        export AMI_ID=$AMI_ID
 
         # Lấy availability zone đầu tiên của region
         export AVAILABILITY_ZONE=$(aws ec2 describe-availability-zones \
