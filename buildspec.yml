@@ -17,20 +17,28 @@ phases:
     commands:
       - echo "Fetching secret values from Secrets Manager"
       - |
-        SECRET_JSON="$TASKCAT_SECRET"
+        # Lấy secret từ AWS Secrets Manager
+        SECRET_JSON=$(aws secretsmanager get-secret-value \
+          --secret-id "$TASKCAT_SECRET" \
+          --query SecretString \
+          --output text)
 
+        # Parse JSON và export variables
         export REGION=$(echo "$SECRET_JSON" | jq -r '.REGION')
         export S3_BUCKET=$(echo "$SECRET_JSON" | jq -r '.S3_BUCKET')
         export KEY_NAME=$(echo "$SECRET_JSON" | jq -r '.KEY_NAME')
         export AMI_ID=$(echo "$SECRET_JSON" | jq -r '.AMI_ID')
 
+        # Lấy availability zone đầu tiên của region
         export AVAILABILITY_ZONE=$(aws ec2 describe-availability-zones \
           --region "$REGION" \
           --query "AvailabilityZones[0].ZoneName" \
           --output text)
 
+        # Lấy IP hiện tại của CodeBuild
         export ALLOWED_SSH_IP="$(curl -s http://checkip.amazonaws.com)/32"
 
+        echo "Configuration:"
         echo "REGION=$REGION"
         echo "S3_BUCKET=$S3_BUCKET"
         echo "KEY_NAME=$KEY_NAME"
@@ -38,8 +46,12 @@ phases:
         echo "AVAILABILITY_ZONE=$AVAILABILITY_ZONE"
         echo "ALLOWED_SSH_IP=$ALLOWED_SSH_IP"
 
+        # Tạo .taskcat.yml từ template
         echo "Generating final .taskcat.yml file..."
         envsubst < taskcat.template.yml > .taskcat.yml
+
+        echo "Generated .taskcat.yml:"
+        cat .taskcat.yml
 
       - echo "Validating CloudFormation templates"
       - cfn-lint CloudFormation/**/*.yaml
@@ -47,4 +59,15 @@ phases:
   build:
     commands:
       - echo "Running taskcat test"
-      - taskcat test run
+      - taskcat test run --no-delete
+
+  post_build:
+    commands:
+      - echo "TaskCat test completed"
+      - |
+        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
+          echo "Build succeeded - cleaning up test resources"
+          taskcat test clean ALL
+        else
+          echo "Build failed - keeping resources for debugging"
+        fi
