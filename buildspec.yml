@@ -17,11 +17,7 @@ phases:
     commands:
       - echo "Fetching secret values from Secrets Manager"
       - |
-        SECRET_JSON=$(aws secretsmanager get-secret-value \
-        --region ${AWS_REGION} \
-        --secret-id "$TASKCAT_SECRET" \
-        --query SecretString \
-        --output text)
+        SECRET_JSON="$TASKCAT_SECRET"
 
         export REGION=$(echo "$SECRET_JSON" | jq -r '.REGION')
         export S3_BUCKET=$(echo "$SECRET_JSON" | jq -r '.S3_BUCKET')
