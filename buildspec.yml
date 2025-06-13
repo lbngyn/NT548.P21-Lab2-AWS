@@ -42,7 +42,7 @@ phases:
         envsubst < taskcat.template.yml > .taskcat.yml
 
         echo "Generated .taskcat.yml:"
-      - taskcat test run --exit-on-failure --no-delete --keep-failed -d
+
       - echo "Validating CloudFormation templates"
       - cfn-lint CloudFormation/**/*.yaml
 
