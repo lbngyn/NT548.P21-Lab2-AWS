@@ -23,6 +23,7 @@ phases:
       - |
         # Parse JSON và export variables
         export REGION=$REGION
+        export S3_BUCKET=$S3_BUCKET
         export KEY_NAME=$KEY_NAME
         export AMI_ID=$AMI_ID
         export AVAILABILITY_ZONE=$AVAILABILITY_ZONE
@@ -32,6 +33,7 @@ phases:
 
         echo "Configuration:"
         echo "REGION=$REGION"
+        echo "S3_BUCKET=$S3_BUCKET"
         echo "KEY_NAME=$KEY_NAME"
         echo "AMI_ID=$AMI_ID"
         echo "AVAILABILITY_ZONE=$AVAILABILITY_ZONE"

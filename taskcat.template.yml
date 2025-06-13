@@ -2,7 +2,7 @@ project:
   name: taskcat
   regions:
     - ${REGION}
-  s3_bucket: taskcat-nt548-lab2-22520969
+  s3_bucket: ${S3_BUCKET}
 
 tests:
   lab2-test:
