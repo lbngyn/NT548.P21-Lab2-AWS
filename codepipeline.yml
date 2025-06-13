@@ -70,7 +70,7 @@ Resources:
                   - ec2:*
                   - ecs:*
                   - eks:*
-                  - lamda:*
+                  - lambda:*
                 Resource: "*"
 
   Lab2CodeBuild:
@@ -107,7 +107,6 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: "cloudformation-bucket-22520969-nt548-lab2"
-    Properties:
       VersioningConfiguration:
         Status: Suspended
       LifecycleConfiguration:
@@ -163,6 +162,8 @@ Resources:
       MaxSessionDuration: 3600
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
 
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -220,14 +221,8 @@ Resources:
                 RoleArn: !GetAtt CloudFormationRole.Arn
                 StackName: NT548-lab2
                 TemplatePath: SourceArtifact::CloudFormation/main.yaml
-                ParameterOverrides: !Sub |
-                  {
-                    "AvailabilityZone": "${AVAILABILITY_ZONE}",
-                    "AllowedSSHIp": "${ALLOWED_SSH_IP}",
-                    "AMI": "${AMI_ID}",
-                    "KeyName": "${KEY_NAME}",
-                    "BucketName": "${S3_BUCKET}"
-                  }
+                ParameterOverrides: BuildArtifact::params.json
               InputArtifacts:
                 - Name: SourceArtifact
+                - Name: BuildArtifact
               RunOrder: 1

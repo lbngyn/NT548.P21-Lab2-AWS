@@ -19,40 +19,45 @@ phases:
 
   pre_build:
     commands:
-      - echo "Fetching secret values from Secrets Manager"
+      - echo "Fetching secret values from Secrets Manager and exporting them"
+      - export REGION=$REGION
+      - export S3_BUCKET=$S3_BUCKET
+      - export KEY_NAME=$KEY_NAME
+      - export AMI_ID=$AMI_ID
+      - export AVAILABILITY_ZONE=$AVAILABILITY_ZONE
+      - export ALLOWED_SSH_IP="$(curl -s http://checkip.amazonaws.com)/32"
+
+      - echo "Writing params.json..."
       - |
-        # Parse JSON và export variables
-        export REGION=$REGION
-        export S3_BUCKET=$S3_BUCKET
-        export KEY_NAME=$KEY_NAME
-        export AMI_ID=$AMI_ID
-        export AVAILABILITY_ZONE=$AVAILABILITY_ZONE
+        cat <<EOF > params.json
+        {
+          "Parameters": {
+            "AvailabilityZone": "$AVAILABILITY_ZONE",
+            "AllowedSSHIp": "$ALLOWED_SSH_IP",
+            "AMI": "$AMI_ID",
+            "KeyName": "$KEY_NAME",
+            "BucketName": "$S3_BUCKET"
+          }
+        }
+        EOF
 
-        # Lấy IP hiện tại của CodeBuild
-        export ALLOWED_SSH_IP="$(curl -s http://checkip.amazonaws.com)/32"
+      - echo "Generating final .taskcat.yml file..."
+      - envsubst < taskcat.template.yml > .taskcat.yml
+      - echo "Generated .taskcat.yml content:"
+      - cat .taskcat.yml
 
-        echo "Configuration:"
-        echo "REGION=$REGION"
-        echo "S3_BUCKET=$S3_BUCKET"
-        echo "KEY_NAME=$KEY_NAME"
-        echo "AMI_ID=$AMI_ID"
-        echo "AVAILABILITY_ZONE=$AVAILABILITY_ZONE"
-        echo "ALLOWED_SSH_IP=$ALLOWED_SSH_IP"
-
-        # Tạo .taskcat.yml từ template
-        echo "Generating final .taskcat.yml file..."
-        envsubst < taskcat.template.yml > .taskcat.yml
-
-        echo "Generated .taskcat.yml:"
-
-      - echo "Validating CloudFormation templates"
+      - echo "Validating CloudFormation templates..."
       - cfn-lint CloudFormation/**/*.yaml
 
   build:
     commands:
-      - echo "Running taskcat test"
+      - echo "Running taskcat tests..."
       - taskcat test run -d
 
   post_build:
     commands:
-      - echo "TaskCat test completed"
+      - echo "TaskCat test completed."
+
+artifacts:
+  files:
+    - params.json
