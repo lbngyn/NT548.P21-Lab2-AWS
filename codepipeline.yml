@@ -185,7 +185,6 @@ Resources:
                 Branch: main
                 Owner: !Ref GitHubOwner
                 Repo: NT548.P21-Lab2-AWS
-                PollForSourceChanges: "false"
                 OAuthToken: "{{resolve:secretsmanager:GitHub/Token:SecretString}}"
               OutputArtifacts:
                 - Name: SourceArtifact
