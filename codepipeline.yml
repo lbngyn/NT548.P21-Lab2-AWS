@@ -219,7 +219,15 @@ Resources:
                 Capabilities: CAPABILITY_IAM
                 RoleArn: !GetAtt CloudFormationRole.Arn
                 StackName: NT548-lab2
-                TemplatePath: SourceArtifact::CloudFormation/main.yml
+                TemplatePath: SourceArtifact::CloudFormation/main.yaml
+                ParameterOverrides: !Sub |
+                  {
+                    "AvailabilityZone": "${AVAILABILITY_ZONE}",
+                    "AllowedSSHIp": "${ALLOWED_SSH_IP}",
+                    "AMI": "${AMI_ID}",
+                    "KeyName": "${KEY_NAME}",
+                    "BucketName": "${S3_BUCKET}"
+                  }
               InputArtifacts:
                 - Name: SourceArtifact
               RunOrder: 1
