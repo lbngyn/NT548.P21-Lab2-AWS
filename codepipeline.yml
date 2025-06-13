@@ -19,11 +19,7 @@ Resources:
             Action: "sts:AssumeRole"
       MaxSessionDuration: 3600
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCodePipeline_ReadOnlyAccess
-        - arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
-        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AdministratorAccess
       Policies:
         - PolicyName: "CodePipelineServicePolicy"
           PolicyDocument:
@@ -53,7 +49,7 @@ Resources:
             Action: "sts:AssumeRole"
       MaxSessionDuration: 3600
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCodeBuildDeveloperAccess
+        - arn:aws:iam::aws:policy/AdministratorAccess
       Policies:
         - PolicyName: "CodeBuildService"
           PolicyDocument:
@@ -144,6 +140,13 @@ Resources:
             Resource:
               - !Sub arn:aws:s3:::${CodePipelineBucket}
               - !Sub arn:aws:s3:::${CodePipelineBucket}/*
+          - Effect: "Allow"
+            Principal:
+              AWS: !GetAtt CloudFormationRole.Arn
+            Action:
+              - s3:GetObject
+            Resource:
+              - !Sub arn:aws:s3:::${CodePipelineBucket}/*
 
   CloudFormationRole:
     Type: AWS::IAM::Role
@@ -161,9 +164,7 @@ Resources:
             Action: "sts:AssumeRole"
       MaxSessionDuration: 3600
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
-        - arn:aws:iam::aws:policy/IAMFullAccess
-        - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+        - arn:aws:iam::aws:policy/AdministratorAccess
 
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
