@@ -2,11 +2,11 @@ version: 0.2
 
 env:
   secrets-manager:
-    REGION: "NT548-lab2:REGION"
-    S3_BUCKET: "NT548-lab2:S3_BUCKET"
-    KEY_NAME: "NT548-lab2:KEY_NAME"
-    AMI_ID: "NT548-lab2:AMI_ID"
-    AVAILABILITY_ZONE: "NT548-lab2:AVAILABILITY_ZONE"
+    REGION: "{{resolve:secretsmanager:REGION:SecretString}}"
+    S3_BUCKET: "{{resolve:secretsmanager:S3_BUCKET:SecretString}}"
+    KEY_NAME: "{{resolve:secretsmanager:KEY_NAME:SecretString}}"
+    AMI_ID: "{{resolve:secretsmanager:AMI_ID:SecretString}}"
+    AVAILABILITY_ZONE: "{{resolve:secretsmanager:AVAILABILITY_ZONE:SecretString}}"
 
 phases:
   install:
@@ -23,7 +23,6 @@ phases:
       - |
         # Parse JSON và export variables
         export REGION=$REGION
-        export S3_BUCKET=$S3_BUCKET
         export KEY_NAME=$KEY_NAME
         export AMI_ID=$AMI_ID
         export AVAILABILITY_ZONE=$AVAILABILITY_ZONE
@@ -33,7 +32,6 @@ phases:
 
         echo "Configuration:"
         echo "REGION=$REGION"
-        echo "S3_BUCKET=$S3_BUCKET"
         echo "KEY_NAME=$KEY_NAME"
         echo "AMI_ID=$AMI_ID"
         echo "AVAILABILITY_ZONE=$AVAILABILITY_ZONE"
@@ -44,8 +42,7 @@ phases:
         envsubst < taskcat.template.yml > .taskcat.yml
 
         echo "Generated .taskcat.yml:"
-        cat .taskcat.yml
-
+      - taskcat test run --exit-on-failure --no-delete --keep-failed -d
       - echo "Validating CloudFormation templates"
       - cfn-lint CloudFormation/**/*.yaml
 

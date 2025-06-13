@@ -2,7 +2,7 @@ project:
   name: taskcat
   regions:
     - ${REGION}
-  s3_bucket: ${S3_BUCKET}
+  s3_bucket: taskcat-test-artifacts-${AWS::AccountId}
 
 tests:
   lab2-test:
