@@ -221,7 +221,7 @@ Resources:
                 RoleArn: !GetAtt CloudFormationRole.Arn
                 StackName: NT548-lab2
                 TemplatePath: SourceArtifact::CloudFormation/main.yaml
-                ParameterOverrides: BuildArtifact::params.json
+                TemplateConfiguration: BuildArtifact::params.json
               InputArtifacts:
                 - Name: SourceArtifact
                 - Name: BuildArtifact
