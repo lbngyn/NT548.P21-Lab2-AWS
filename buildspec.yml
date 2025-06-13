@@ -2,11 +2,11 @@ version: 0.2
 
 env:
   secrets-manager:
-    REGION: "{{resolve:secretsmanager:REGION:SecretString}}"
-    S3_BUCKET: "{{resolve:secretsmanager:S3_BUCKET:SecretString}}"
-    KEY_NAME: "{{resolve:secretsmanager:KEY_NAME:SecretString}}"
-    AMI_ID: "{{resolve:secretsmanager:AMI_ID:SecretString}}"
-    AVAILABILITY_ZONE: "{{resolve:secretsmanager:AVAILABILITY_ZONE:SecretString}}"
+    REGION: REGION
+    S3_BUCKET: S3_BUCKET
+    KEY_NAME: KEY_NAME
+    AMI_ID: AMI_ID
+    AVAILABILITY_ZONE: AVAILABILITY_ZONE
 
 phases:
   install:
