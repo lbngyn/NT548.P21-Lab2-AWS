@@ -17,9 +17,6 @@ Resources:
             Principal:
               Service: "codepipeline.amazonaws.com"
             Action: "sts:AssumeRole"
-      MaxSessionDuration: 3600
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
       Policies:
         - PolicyName: "CodePipelineServicePolicy"
           PolicyDocument:
@@ -27,12 +24,17 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                  - codepipeline:*
                   - s3:*
                   - codebuild:*
                   - cloudformation:*
                   - iam:*
                   - secretsmanager:GetSecretValue
                   - logs:*
+                  - ec2:*
+                  - ecs:*
+                  - eks:*
+                  - lambda:*
                 Resource: "*"
 
   CodeBuildServiceRole:
@@ -47,9 +49,6 @@ Resources:
             Principal:
               Service: "codebuild.amazonaws.com"
             Action: "sts:AssumeRole"
-      MaxSessionDuration: 3600
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
       Policies:
         - PolicyName: "CodeBuildService"
           PolicyDocument:
@@ -57,6 +56,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
+                  - codepipeline:*
                   - s3:*
                   - codebuild:*
                   - cloudformation:*
@@ -118,11 +118,11 @@ Resources:
               SSEAlgorithm: AES256
             BucketKeyEnabled: true
       PublicAccessBlockConfiguration:
-        BlockPublicAcls: false
-        IgnorePublicAcls: false
-        BlockPublicPolicy: false
-        RestrictPublicBuckets: false
-      AccessControl: Private # Ensures that only the owner has full control.
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      AccessControl: Private
 
   CodePipelineBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -135,24 +135,21 @@ Resources:
             Principal:
               AWS: !GetAtt AWSCodePipelineServiceRole.Arn
             Action:
-              - s3:GetObject
-              - s3:PutObject
+              - s3:*
             Resource:
-              - !Sub arn:aws:s3:::${CodePipelineBucket}
               - !Sub arn:aws:s3:::${CodePipelineBucket}/*
           - Effect: "Allow"
             Principal:
               AWS: !GetAtt CloudFormationRole.Arn
             Action:
-              - s3:GetObject
+              - s3:*
             Resource:
               - !Sub arn:aws:s3:::${CodePipelineBucket}/*
 
   CloudFormationRole:
     Type: AWS::IAM::Role
-    DeletionPolicy: Delete
     Properties:
-      RoleName: "CloudformationRole"
+      RoleName: !Sub "CloudformationRole-${AWS::StackName}"
       Path: "/"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -160,11 +157,27 @@ Resources:
           - Sid: ""
             Effect: "Allow"
             Principal:
-              Service: "cloudformation.amazonaws.com"
-            Action: "sts:AssumeRole"
-      MaxSessionDuration: 3600
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
+              Service: cloudformation.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: "CloudFormationFullAccess"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codepipeline:*
+                  - s3:*
+                  - codebuild:*
+                  - cloudformation:*
+                  - iam:*
+                  - secretsmanager:GetSecretValue
+                  - logs:*
+                  - ec2:*
+                  - ecs:*
+                  - eks:*
+                  - lambda:*
+                Resource: "*"
 
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -218,7 +231,7 @@ Resources:
                 Version: "1"
               Configuration:
                 ActionMode: CREATE_UPDATE
-                Capabilities: CAPABILITY_IAM
+                Capabilities: CAPABILITY_NAMED_IAM
                 RoleArn: !GetAtt CloudFormationRole.Arn
                 StackName: NT548-lab2
                 TemplatePath: SourceArtifact::CloudFormation/main.yaml
