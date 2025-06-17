@@ -66,7 +66,10 @@ aws cloudformation create-stack \
   --stack-name NT548-lab2-codepipeline \
   --template-body file://codepipeline.yml \
   --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
-  --parameters ParameterKey=GitHubOwner,ParameterValue=lbngyn
+  --parameters \
+      ParameterKey=GitHubOwner,ParameterValue=lbngyn \
+      ParameterKey=BucketName,ParameterValue=$secrets['S3_BUCKET']
+
 ```
 
 - Replace `lbngyn` with your actual GitHub username or organization.

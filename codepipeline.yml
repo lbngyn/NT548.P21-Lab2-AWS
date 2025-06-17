@@ -4,6 +4,10 @@ Parameters:
     Type: String
     Description: GitHub repository owner (e.g., username or organization)
 
+  BucketName:
+    Type: String
+    Description: S3 bucket name for CodePipeline artifacts and templates
+
 Resources:
   AWSCodePipelineServiceRole:
     Type: AWS::IAM::Role
@@ -102,7 +106,7 @@ Resources:
   CodePipelineBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: "cloudformation-bucket-22520969-nt548-lab2"
+      BucketName: !Ref BucketName
       VersioningConfiguration:
         Status: Enabled
       LifecycleConfiguration:
